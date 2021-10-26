@@ -49,12 +49,12 @@ void setup() {
   display.clearDisplay();
 
   //Draw a single pixel in white
-  display.drawPixel(10, 10, SSD1306_WHITE);
+//  display.drawPixel(10, 10, SSD1306_WHITE);
 
   //Show the display buffer on the screen. You MUST call display() after
   //drawing commands to make them visible on screen!
-  display.display();
-  delay(2000);
+//  display.display();
+//  delay(2000);
   // display.display() is NOT necessary after every single drawing command,
   // unless that's what you want...rather, you can batch up a bunch of
   // drawing operations and then update the screen all at once by calling
@@ -63,7 +63,7 @@ void setup() {
 
   testfillcircle();
 
-  //  testscrolltext();
+
 
 
 
@@ -82,79 +82,81 @@ void loop() {
 
   button1.tick();
   if (buttonState) {
-    testdrawstyles();
+    testscrolltext();
     buttonState = false;
   }
 }
 
 
 
-void testdrawstyles(void) {
-  display.clearDisplay();
-  display.setTextSize(5);
-  display.setTextColor(SSD1306_WHITE);
-  display.setRotation(0);
-  display.setCursor(7, 7);
-  display.printf("Help", 47, 47);
-  display.display();
-  delay(1000);
-
-  display.clearDisplay();
-  display.setTextSize(5);
-  display.setTextColor(SSD1306_WHITE);
-  display.setRotation(0);
-  display.setCursor(35, 10);
-  display.printf("is", 47, 47);
-  display.display();
-  delay(1000);
-
-  display.clearDisplay();
-  display.setTextSize(5);
-  display.setTextColor(SSD1306_WHITE);
-  display.setRotation(0);
-  display.setCursor(35, 10);
-  display.printf("on", 47, 47);
-  display.display();
-  delay(1000);
-
-  display.clearDisplay();
-  display.setTextSize(5);
-  display.setTextColor(SSD1306_WHITE);
-  display.setRotation(0);
-  display.setCursor(20, 10);
-  display.printf("the", 47, 47);
-  display.display();
-  delay(1000);
-
-
-  display.clearDisplay();
-  display.setTextSize(5);
-  display.setTextColor(SSD1306_WHITE);
-  display.setRotation(0);
-  display.setCursor(20, 10);
-  display.printf("way", 47, 47);
-  display.display();
-  delay(1000);
-
-
-
-}
+//void testdrawstyles(void) {
+//  display.clearDisplay();
+//  display.setTextSize(5);
+//  display.setTextColor(SSD1306_WHITE);
+//  display.setRotation(0);
+//  display.setCursor(7, 7);
+//  display.printf("Help", 47, 47);
+//  display.display();
+//  delay(1000);
+//
+//  display.clearDisplay();
+//  display.setTextSize(5);
+//  display.setTextColor(SSD1306_WHITE);
+//  display.setRotation(0);
+//  display.setCursor(35, 10);
+//  display.printf("is", 47, 47);
+//  display.display();
+//  delay(1000);
+//
+//  display.clearDisplay();
+//  display.setTextSize(5);
+//  display.setTextColor(SSD1306_WHITE);
+//  display.setRotation(0);
+//  display.setCursor(35, 10);
+//  display.printf("on", 47, 47);
+//  display.display();
+//  delay(1000);
+//
+//  display.clearDisplay();
+//  display.setTextSize(5);
+//  display.setTextColor(SSD1306_WHITE);
+//  display.setRotation(0);
+//  display.setCursor(20, 10);
+//  display.printf("the", 47, 47);
+//  display.display();
+//  delay(1000);
+//
+//
+//  display.clearDisplay();
+//  display.setTextSize(5);
+//  display.setTextColor(SSD1306_WHITE);
+//  display.setRotation(0);
+//  display.setCursor(20, 10);
+//  display.printf("way", 47, 47);
+//  display.display();
+//  delay(1000);
+//
+//
+//
+//}
 
 void testscrolltext(void) {
   display.clearDisplay();
 
   display.setTextSize(2); // Draw 2X-scale text
   display.setTextColor(SSD1306_WHITE);
-  display.setCursor(10, 0);
-  display.println(F("scroll"));
+  display.setCursor(20, 10);
+  display.println("Help is on the way.");
   display.display();      // Show initial text
   delay(100);
-}
+
 // Scroll in various directions, pausing in-between:
-//  display.startscrollright(0x00, 0x0F);
-//  delay(2000);
-//  display.stopscroll();
-//  delay(1000);
+display.startscrollleft(0x1, 0x07);
+  delay(2000);
+//display.stopscroll();
+//delay(1000);
+
+}
 void testfillcircle(void) {
   display.clearDisplay();
 
