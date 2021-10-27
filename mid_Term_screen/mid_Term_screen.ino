@@ -2,6 +2,10 @@
 #include<Wire.h>
 #include<Adafruit_GFX.h>
 #include<Adafruit_SSD1306.h>
+#include <SPI.h>
+#include <Ethernet.h>
+#include <mac.h>
+#include <hue.h>
 
 #define SCREEN_WIDTH 128 //OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED dispaly width, in pixels
@@ -20,6 +24,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #define LOGO_HEIGHT 16
 #define LOGO_WIDTH  16
 bool buttonState;
+bool longButtonState;
 const int ButtonPIN = 23;
 
 OneButton button1 (ButtonPIN , false);
@@ -30,9 +35,10 @@ OneButton button1 (ButtonPIN , false);
 void setup() {
   Serial.begin(9600);
   button1.attachClick(click);
-
   button1.setClickTicks(250);
   button1.setPressTicks(2000);
+  button1.attachLongPressStart(longPressStart1);
+
 
   // SSD1306_SWITCHAPVCC = generate display voltage from 3.3V Internally
   if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
@@ -40,6 +46,15 @@ void setup() {
     for (;;); //Dont proceed, loop forever
   }
 
+  pinMode(10, OUTPUT);
+  digitalWrite(10, HIGH);
+  pinMode(4, OUTPUT);
+  digitalWrite(4, HIGH);
+
+  Ethernet.begin(mac);
+  delay(200);          //ensure Serial Monitor is up and running
+  printIP();
+  Serial.printf("LinkStatus: %i  \n", Ethernet.linkStatus());
   //Show initial display buffer contents on the screen --
   //the library initializes this with an Adafruit splash screen.
   display.display();
@@ -49,114 +64,126 @@ void setup() {
   display.clearDisplay();
 
   //Draw a single pixel in white
-//  display.drawPixel(10, 10, SSD1306_WHITE);
+  //  display.drawPixel(10, 10, SSD1306_WHITE);
 
   //Show the display buffer on the screen. You MUST call display() after
   //drawing commands to make them visible on screen!
-//  display.display();
-//  delay(2000);
+  //  display.display();
+  //  delay(2000);
   // display.display() is NOT necessary after every single drawing command,
   // unless that's what you want...rather, you can batch up a bunch of
   // drawing operations and then update the screen all at once by calling
   // display.display(). These examples demonstrate both approaches...
 
-
   testfillcircle();
-
-
-
-
 
   display.invertDisplay(true);
   delay(1000);
   display.invertDisplay(false);
   delay(1000);
-
-
 }
-
-
 
 void loop() {
 
+  //  int rando = random(10000, 60000);
+  //  int c = 0;
+  //  for (int i = 1; i <= 255; i += 10) {
+  //    setHue(5, true, HueRainbow[(c++) % 7], 255, 255); //loop the rainbow
+  //    delay (5000);
+  //  }
 
   button1.tick();
   if (buttonState) {
-    testscrolltext();
+    testdrawstyles();
     buttonState = false;
+    int randoCool = random(40000, 60000);
+  
+    for (int i = 1; i <= 255; i += 10) {
+      setHue(6, true,randoCool, i, 255); //loop the rainbow
+      delay (100);
+    }
   }
+  
+  if (longButtonState) {
+    testdrawstyles();
+    longButtonState = false;
+    int randoWarm = random(100, 10000);
+   
+    for (int i = 1; i <= 255; i += 10) {
+      setHue(6, true,randoWarm , i, 255); //loop the rainbow
+      delay (100);
+    }
+  }
+  setHue(6,false,0,0,0);
+  delay(1000);
 }
 
 
 
-//void testdrawstyles(void) {
-//  display.clearDisplay();
-//  display.setTextSize(5);
-//  display.setTextColor(SSD1306_WHITE);
-//  display.setRotation(0);
-//  display.setCursor(7, 7);
-//  display.printf("Help", 47, 47);
-//  display.display();
-//  delay(1000);
-//
-//  display.clearDisplay();
-//  display.setTextSize(5);
-//  display.setTextColor(SSD1306_WHITE);
-//  display.setRotation(0);
-//  display.setCursor(35, 10);
-//  display.printf("is", 47, 47);
-//  display.display();
-//  delay(1000);
-//
-//  display.clearDisplay();
-//  display.setTextSize(5);
-//  display.setTextColor(SSD1306_WHITE);
-//  display.setRotation(0);
-//  display.setCursor(35, 10);
-//  display.printf("on", 47, 47);
-//  display.display();
-//  delay(1000);
-//
-//  display.clearDisplay();
-//  display.setTextSize(5);
-//  display.setTextColor(SSD1306_WHITE);
-//  display.setRotation(0);
-//  display.setCursor(20, 10);
-//  display.printf("the", 47, 47);
-//  display.display();
-//  delay(1000);
-//
-//
-//  display.clearDisplay();
-//  display.setTextSize(5);
-//  display.setTextColor(SSD1306_WHITE);
-//  display.setRotation(0);
-//  display.setCursor(20, 10);
-//  display.printf("way", 47, 47);
-//  display.display();
-//  delay(1000);
-//
-//
-//
-//}
-
-void testscrolltext(void) {
+void testdrawstyles(void) {
   display.clearDisplay();
-
-  display.setTextSize(2); // Draw 2X-scale text
+  display.setTextSize(5);
   display.setTextColor(SSD1306_WHITE);
+  display.setRotation(0);
+  display.setCursor(7, 7);
+  display.printf("Help", 47, 47);
+  display.display();
+  delay(1000);
+
+  display.clearDisplay();
+  display.setTextSize(5);
+  display.setTextColor(SSD1306_WHITE);
+  display.setRotation(0);
+  display.setCursor(35, 10);
+  display.printf("is", 47, 47);
+  display.display();
+  delay(1000);
+
+  display.clearDisplay();
+  display.setTextSize(5);
+  display.setTextColor(SSD1306_WHITE);
+  display.setRotation(0);
+  display.setCursor(35, 10);
+  display.printf("on", 47, 47);
+  display.display();
+  delay(1000);
+
+  display.clearDisplay();
+  display.setTextSize(5);
+  display.setTextColor(SSD1306_WHITE);
+  display.setRotation(0);
   display.setCursor(20, 10);
-  display.println("Help is on the way.");
-  display.display();      // Show initial text
-  delay(100);
+  display.printf("the", 47, 47);
+  display.display();
+  delay(1000);
+
+
+  display.clearDisplay();
+  display.setTextSize(5);
+  display.setTextColor(SSD1306_WHITE);
+  display.setRotation(0);
+  display.setCursor(20, 10);
+  display.printf("way", 47, 47);
+  display.display();
+  delay(1000);
+}
+
+//void testscrolltext(void) {
+//  display.clearDisplay();
+//
+//  display.setTextSize(2); // Draw 2X-scale text
+//  display.setTextColor(SSD1306_WHITE);
+//  display.setCursor(20, 10);
+//  display.println("Help is on the way.");
+//  display.display();      // Show initial text
+//  delay(100);
 
 // Scroll in various directions, pausing in-between:
-display.startscrollleft(0x1, 0x07);
-  delay(2000);
+//display.startscrollleft(0x1, 0x07);
+//  delay(2000);
 //display.stopscroll();
 //delay(1000);
 
-}
 void testfillcircle(void) {
   display.clearDisplay();
 
@@ -166,13 +193,21 @@ void testfillcircle(void) {
     display.display(); // Update screen with each newly-drawn circle
     delay(2);
   }
-
   delay(2000);
-
 }
-
 
 void click() {
   buttonState = true;
   Serial.println("click!!");
+}
+void longPressStart1(){
+  longButtonState = true;
+  Serial.println("longpress");
+}
+void printIP() {
+  Serial.printf("My IP address: ");
+  for (byte thisByte = 0; thisByte < 3; thisByte++) {
+    Serial.printf("%i.", Ethernet.localIP()[thisByte]);
+  }
+  Serial.printf("%i\n", Ethernet.localIP()[3]);
 }
