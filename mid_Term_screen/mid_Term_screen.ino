@@ -24,11 +24,13 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #define LOGO_HEIGHT 16
 #define LOGO_WIDTH  16
 bool buttonState;
-bool longButtonState;
+bool buttonStateTwo;
+bool isStarted;
 const int ButtonPIN = 23;
+const int ButtonPinTwo = 22;
 
 OneButton button1 (ButtonPIN , false);
-
+OneButton buttonTwo (ButtonPinTwo, false);
 
 
 
@@ -36,8 +38,13 @@ void setup() {
   Serial.begin(9600);
   button1.attachClick(click);
   button1.setClickTicks(250);
-  button1.setPressTicks(2000);
-  button1.attachLongPressStart(longPressStart1);
+  button1.setPressTicks(4000);
+  buttonTwo.attachClick(clickTwo);
+
+//  pinMode (A0, INPUT);
+//  randomSeed (analogRead(A0));
+
+
 
 
   // SSD1306_SWITCHAPVCC = generate display voltage from 3.3V Internally
@@ -85,37 +92,35 @@ void setup() {
 
 void loop() {
 
-  //  int rando = random(10000, 60000);
-  //  int c = 0;
-  //  for (int i = 1; i <= 255; i += 10) {
-  //    setHue(5, true, HueRainbow[(c++) % 7], 255, 255); //loop the rainbow
-  //    delay (5000);
-  //  }
 
   button1.tick();
+  buttonTwo.tick();
   if (buttonState) {
     testdrawstyles();
     buttonState = false;
     int randoCool = random(40000, 60000);
-  
+
     for (int i = 1; i <= 255; i += 10) {
-      setHue(6, true,randoCool, i, 255); //loop the rainbow
+      setHue(5, true, randoCool , i, 255); //loop the rainbow
       delay (100);
     }
   }
-  
-  if (longButtonState) {
+
+  if (buttonStateTwo) {
     testdrawstyles();
-    longButtonState = false;
+    buttonStateTwo = false;
     int randoWarm = random(100, 10000);
-   
+
     for (int i = 1; i <= 255; i += 10) {
-      setHue(6, true,randoWarm , i, 255); //loop the rainbow
+      setHue(5, true, randoWarm  , i, 255); //loop the rainbow
       delay (100);
     }
   }
-  setHue(6,false,0,0,0);
-  delay(1000);
+  if (isStarted) {
+    setHue(5, false, 0, 0, 0);
+    delay(1000);
+    isStarted = false;
+  }
 }
 
 
@@ -197,12 +202,14 @@ void testfillcircle(void) {
 }
 
 void click() {
+  isStarted = true;
   buttonState = true;
   Serial.println("click!!");
 }
-void longPressStart1(){
-  longButtonState = true;
-  Serial.println("longpress");
+void clickTwo() {
+  isStarted = true;
+  buttonStateTwo = true;
+  Serial.println("but2");
 }
 void printIP() {
   Serial.printf("My IP address: ");
