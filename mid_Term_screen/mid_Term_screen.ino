@@ -16,6 +16,9 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 Adafruit_BME280 bme;
 
+const int trigPin = 2; //WHITE
+const int echoPin = 3; //YELLOW
+
 bool BmeStatus;
 bool buttonState;
 bool buttonStateTwo;
@@ -26,6 +29,7 @@ const byte BmeAddress = 0x76;
 const char degree = 0xF8 ; // Decimal 248 = 0 xF8
 float tempC;
 float tempF;
+float duration, distance;
 int status;
 
 OneButton button1 (ButtonPIN , false);
@@ -33,6 +37,10 @@ OneButton buttonTwo (ButtonPinTwo, false);
 
 void setup() {
   Serial.begin(9600);
+
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
   button1.attachClick(click);
   button1.setClickTicks(250);
   button1.setPressTicks(4000);
@@ -71,6 +79,18 @@ void setup() {
 
 void loop() {
 
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  duration = pulseIn(echoPin, HIGH);
+  distance = (duration * .0343) / 2;
+  Serial.print("Distance: ");
+  Serial.println(distance);
+
+
   tempC = bme.readTemperature();
   tempF = (tempC * 9.0 / 5.0) + 32;
   testtempdegree();
@@ -104,6 +124,18 @@ void loop() {
     delay(1000);
     isStarted = false;
   }
+
+digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  duration = pulseIn(echoPin, HIGH);
+  distance = (duration * .0343) / 2;
+//  Serial.print("Distance: ");
+//  Serial.println(distance);
+
 }
 
 void testtempdegree(void) {
