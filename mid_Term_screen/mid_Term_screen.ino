@@ -6,6 +6,10 @@
 #include <Ethernet.h>
 #include <mac.h>
 #include <hue.h>
+#include <wemo.h>
+
+#include <Ultrasonic.h> // include Seeed Studio ultrasonic ranger library
+
 #include <Adafruit_BME280.h>
 #define SCREEN_WIDTH 128 //OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED dispaly width, in pixels
@@ -16,13 +20,15 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 Adafruit_BME280 bme;
 
-const int trigPin = 2; //WHITE
-const int echoPin = 3; //YELLOW
 
 bool BmeStatus;
 bool buttonState;
 bool buttonStateTwo;
 bool isStarted;
+
+const int UsonicPin = 2;
+Ultrasonic ultraSon (UsonicPin);
+
 const int ButtonPIN = 23;
 const int ButtonPinTwo = 22;
 const byte BmeAddress = 0x76;
@@ -38,13 +44,11 @@ OneButton buttonTwo (ButtonPinTwo, false);
 void setup() {
   Serial.begin(9600);
 
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT);
-
   button1.attachClick(click);
   button1.setClickTicks(250);
   button1.setPressTicks(4000);
   buttonTwo.attachClick(clickTwo);
+
 
   if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
@@ -78,17 +82,24 @@ void setup() {
 }
 
 void loop() {
+  long RangeInInches;
 
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
 
-  duration = pulseIn(echoPin, HIGH);
-  distance = (duration * .0343) / 2;
-  Serial.print("Distance: ");
-  Serial.println(distance);
+  Serial.println("The distance to obstacles in front is: ");
+  RangeInInches = ultraSon.MeasureInInches();
+  Serial.print(RangeInInches);
+  Serial.println("inch");
+  if (RangeInInches <= 20) {//when room is empty fan
+    switchOFF(4);
+  }
+  else {
+    switchON(4);
+  }
+  if (RangeInInches >=20)//when person is in room alien light
+  switchOFF(0);
+  else
+  switchON(0);
+
 
 
   tempC = bme.readTemperature();
@@ -102,7 +113,7 @@ void loop() {
     buttonState = false;
     int randoCool = random(40000, 60000);
 
-    for (int i = 1; i <= 255; i += 10) {
+    for (int i = 0; i <= 255; i += 10) {
       setHue(5, true, randoCool , i, 255); //loop the rainbow
       delay (100);
     }
@@ -113,7 +124,7 @@ void loop() {
     buttonStateTwo = false;
     int randoWarm = random(100, 10000);
 
-    for (int i = 1; i <= 255; i += 10) {
+    for (int i = 0; i <= 255; i += 10) {
       setHue(5, true, randoWarm  , i, 255); //loop the rainbow
       delay (100);
     }
@@ -125,16 +136,6 @@ void loop() {
     isStarted = false;
   }
 
-digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-
-  duration = pulseIn(echoPin, HIGH);
-  distance = (duration * .0343) / 2;
-//  Serial.print("Distance: ");
-//  Serial.println(distance);
 
 }
 
@@ -189,15 +190,7 @@ void testfamilycall(void) {
   delay(800);
 }
 
-//  display.clearDisplay();
-//  display.setTextSize(5);
-//  display.setTextColor(SSD1306_WHITE);
-//  display.setRotation(0);
-//  display.setCursor(20, 10);
-//  display.printf("way", 47, 47);
-//  display.display();
-//  delay(800);
-//}
+
 
 void testfillcircle(void) {
   display.clearDisplay();
