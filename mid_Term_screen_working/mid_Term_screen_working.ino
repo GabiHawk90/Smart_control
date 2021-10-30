@@ -7,99 +7,150 @@
 #include <mac.h>
 #include <hue.h>
 #include <wemo.h>
-#include <Ultrasonic.h> // include Seeed Studio ultrasonic ranger library
-#include <Adafruit_BME280.h>
 
-//oled setup
+#include <Ultrasonic.h> // include Seeed Studio ultrasonic ranger library
+
+#include <Adafruit_BME280.h>
 #define SCREEN_WIDTH 128 //OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED dispaly width, in pixels
-#define OLED_RESET  4// Rest pin # (or -1 if sharing Arduino reset pin)
+#define OLED_RESET  76// Rest pin # (or -1 if sharing Arduino reset pin)
 #define SCREEN_ADDRESS 0X3C ///< See datasheet for address; 0x3D for 128x64,
-
-//OBJECTS
+#define LOGO_HEIGHT 16
+#define LOGO_WIDTH  16
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 Adafruit_BME280 bme;
-const int ULTRAPIN = 2;
-Ultrasonic ultraSon (ULTRAPIN);
-const int BUTTONPIN = 23;
-const int BUTTONPINTWO = 22;
-OneButton button1 (BUTTONPIN , false);
-OneButton buttonTwo (BUTTONPINTWO, false);
 
-const byte BMEADDRESS = 0x76;
+
 bool BmeStatus;
-bool isStarted;
 bool buttonState;
 bool buttonStateTwo;
+bool isStarted;
 
-const char DEGREE = 0xF8 ; // Decimal 248 = 0 xF8
+const int UsonicPin = 2;
+Ultrasonic ultraSon (UsonicPin);
+
+const int ButtonPIN = 23;
+const int ButtonPinTwo = 22;
+const byte BmeAddress = 0x76;
+const char degree = 0xF8 ; // Decimal 248 = 0 xF8
 float tempC;
 float tempF;
+float duration, distance;
+int status;
 
-
-
+OneButton button1 (ButtonPIN , false);
+OneButton buttonTwo (ButtonPinTwo, false);
 
 void setup() {
   Serial.begin(9600);
 
-  startObjects();
-
-  //button set up
   button1.attachClick(click);
-  buttonTwo.attachClick(clickTwo);
   button1.setClickTicks(250);
-  buttonTwo.setClickTicks(250);
+  button1.setPressTicks(4000);
+  buttonTwo.attachClick(clickTwo);
 
-  showFillCircle();
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for (;;); //Dont proceed, loop forever
+  }
+
+  BmeStatus = bme.begin (BmeAddress);
+  if (BmeStatus == false) {
+    Serial.printf("BME280 at address 0x%02 X failed tostart", BmeAddress);
+  }
+
+  pinMode(10, OUTPUT);
+  digitalWrite(10, HIGH);
+  pinMode(4, OUTPUT);
+  digitalWrite(4, HIGH);
+  Ethernet.begin(mac);
+  delay(200);
+  printIP();
+  Serial.printf("LinkStatus: %i  \n", Ethernet.linkStatus());
+  display.display();
+  delay(2000);
+
+  display.clearDisplay();
+
+  testfillcircle();
+
+  display.invertDisplay(true);
+  delay(1000);
+  display.invertDisplay(false);
+  delay(1000);
 }
 
 void loop() {
-  long rangeInInches;
+  long RangeInInches;
 
-  rangeInInches = ultraSon.MeasureInInches();
-  Serial.printf("%i inch\n", rangeInInches);
 
-  setWemos(rangeInInches);
+  Serial.println("The distance to obstacles in front is: ");
+  RangeInInches = ultraSon.MeasureInInches();
+  Serial.print(RangeInInches);
+  Serial.println("inch");
+  if (RangeInInches <= 20) {//when room is empty fan
+    switchOFF(4);
+  }
+  else {
+    switchON(4);
+  }
+  if (RangeInInches >=20)//when person is in room alien light
+  switchOFF(0);
+  else
+  switchON(0);
+
+
 
   tempC = bme.readTemperature();
   tempF = (tempC * 9.0 / 5.0) + 32;
-  showTempDegree();
+  testtempdegree();
 
   button1.tick();
   buttonTwo.tick();
   if (buttonState) {
-    showFamilyCall();
+    testfamilycall();
     buttonState = false;
     int randoCool = random(40000, 60000);
-    setHues(randoCool, true);
+
+    for (int i = 0; i <= 255; i += 10) {
+      setHue(5, true, randoCool , i, 255); //loop the rainbow
+      delay (100);
+    }
   }
+
   if (buttonStateTwo) {
-    showEmergCall();
+    testemergstyles();
     buttonStateTwo = false;
     int randoWarm = random(100, 10000);
-    setHues(randoWarm, true);
-  }
-  //turn hues off
-  if (isStarted) {
-    setHues(0, false);
 
+    for (int i = 0; i <= 255; i += 10) {
+      setHue(5, true, randoWarm  , i, 255); //loop the rainbow
+      delay (100);
+    }
+  }
+
+  if (isStarted) {
+    setHue(5, false, 0, 0, 0);
     delay(1000);
     isStarted = false;
   }
+
+
 }
 
-void showTempDegree(void) {
+void testtempdegree(void) {
 
   display.clearDisplay();
   display.setTextSize(4);
   display.setTextColor(SSD1306_WHITE);
   display.setRotation(0);
   display.setCursor(7, 9);
-  display.printf("%0.1f%c", tempF, DEGREE);
+  display.printf("%0.1f%c", tempF, degree);
   display.display();
 }
 
-void showEmergCall(void) {
+void testemergstyles(void) {
   display.clearDisplay();
   display.setTextSize(3);
   display.setTextColor(SSD1306_WHITE);
@@ -118,7 +169,8 @@ void showEmergCall(void) {
   display.display();
   delay(800);
 }
-void showFamilyCall(void) {
+
+void testfamilycall(void) {
   display.clearDisplay();
   display.setTextSize(3);
   display.setTextColor(SSD1306_WHITE);
@@ -137,7 +189,10 @@ void showFamilyCall(void) {
   display.display();
   delay(800);
 }
-void showFillCircle(void) {
+
+
+
+void testfillcircle(void) {
   display.clearDisplay();
 
   for (int16_t i = max(display.width(), display.height()) / 2; i > 0; i -= 3) {
@@ -147,11 +202,8 @@ void showFillCircle(void) {
     delay(2);
   }
   delay(2000);
-  display.invertDisplay(true);
-  delay(1000);
-  display.invertDisplay(false);
-  delay(1000);
 }
+
 void click() {
   isStarted = true;
   buttonState = true;
@@ -168,33 +220,4 @@ void printIP() {
     Serial.printf("%i.", Ethernet.localIP()[thisByte]);
   }
   Serial.printf("%i\n", Ethernet.localIP()[3]);
-}
-void startObjects() {
-}
-void setHues(int color, bool hueOn) {
-  if (hueOn) {
-    for (int i = 0; i <= 255; i += 10) {
-      for (int h = 0; h <= 5; h++) {
-        setHue(h, true, color , i, 255);
-        delay (100);
-      }
-    }
-  }
-  else {
-    for (int h = 0; h <= 5; h++) {
-      setHue(h, false, 0, 0, 0);
-    }
-  }
-}
-void setWemos(int rangeInInches) {
-  if (rangeInInches <= 20) {//when room is empty fan
-    switchOFF(4);
-  }
-  else {
-    switchON(4);
-  }
-  if (rangeInInches >= 20) //when person is in room alien light
-    switchOFF(0);
-  else
-    switchON(0);
 }
