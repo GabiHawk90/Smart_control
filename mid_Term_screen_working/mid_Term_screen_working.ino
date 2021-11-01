@@ -43,14 +43,7 @@ OneButton buttonTwo (ButtonPinTwo, false);
 
 void setup() {
   Serial.begin(9600);
-
-  button1.attachClick(click);
-  button1.setClickTicks(250);
-  button1.setPressTicks(4000);
-  buttonTwo.attachClick(clickTwo);
-
-
-  if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
     for (;;); //Dont proceed, loop forever
   }
@@ -68,6 +61,13 @@ void setup() {
   delay(200);
   printIP();
   Serial.printf("LinkStatus: %i  \n", Ethernet.linkStatus());
+
+
+  button1.attachClick(click);
+  button1.setClickTicks(250);
+  button1.setPressTicks(4000);
+  buttonTwo.attachClick(clickTwo);
+
   display.display();
   delay(2000);
 

@@ -31,6 +31,8 @@ bool BmeStatus;
 bool isStarted;
 bool buttonState;
 bool buttonStateTwo;
+bool isLampOn;
+bool isFanOn;
 
 const char DEGREE = 0xF8 ; // Decimal 248 = 0 xF8
 float tempC;
@@ -47,8 +49,8 @@ void setup() {
   //button set up
   button1.attachClick(click);
   buttonTwo.attachClick(clickTwo);
-  button1.setClickTicks(250);
-  buttonTwo.setClickTicks(250);
+  button1.setClickTicks(500);
+  buttonTwo.setClickTicks(500);
 
   showFillCircle();
 }
@@ -57,7 +59,7 @@ void loop() {
   long rangeInInches;
 
   rangeInInches = ultraSon.MeasureInInches();
-  Serial.printf("%i inch\n", rangeInInches);
+//  Serial.printf("%i inch\n", rangeInInches);
 
   setWemos(rangeInInches);
 
@@ -170,31 +172,56 @@ void printIP() {
   Serial.printf("%i\n", Ethernet.localIP()[3]);
 }
 void startObjects() {
+  if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for (;;); //Dont proceed, loop forever
+  }
+
+  BmeStatus = bme.begin (BMEADDRESS);
+  if (BmeStatus == false) {
+    Serial.printf("BME280 at address 0x%02 X failed tostart", BMEADDRESS);
+  }
+
+  pinMode(10, OUTPUT);
+  digitalWrite(10, HIGH);
+  pinMode(4, OUTPUT);
+  digitalWrite(4, HIGH);
+  Ethernet.begin(mac);
+  delay(200);
+  printIP();
+  Serial.printf("LinkStatus: %i  \n", Ethernet.linkStatus());
+
 }
 void setHues(int color, bool hueOn) {
   if (hueOn) {
     for (int i = 0; i <= 255; i += 10) {
-      for (int h = 0; h <= 5; h++) {
+      for (int h = 1; h <= 6; h++) {
         setHue(h, true, color , i, 255);
-        delay (100);
+        delay (50);
       }
     }
   }
   else {
-    for (int h = 0; h <= 5; h++) {
+    for (int h = 1; h <= 6; h++) {
       setHue(h, false, 0, 0, 0);
     }
   }
 }
 void setWemos(int rangeInInches) {
   if (rangeInInches <= 20) {//when room is empty fan
-    switchOFF(4);
+    if (!isLampOn) {
+      switchOFF(3);
+      switchON(0);
+      isLampOn = true;
+      isFanOn = false;
+    }
   }
   else {
-    switchON(4);
+    if (!isFanOn) {
+      switchON(3);
+      switchOFF(0);
+      isFanOn = true;
+      isLampOn = false;
+    }
   }
-  if (rangeInInches >= 20) //when person is in room alien light
-    switchOFF(0);
-  else
-    switchON(0);
 }
